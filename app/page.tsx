@@ -1,15 +1,13 @@
-import { getPopularMovies } from "@/lib/tmdb"
-import MovieCard from "@/components/MovieCard"
 import SearchBar from "@/components/SearchBar"
-import SortableList from "@/components/SortableList"
+import { getSortedMovies } from "@/lib/tmdb";
+
 
 export default async function Home() {
- 
+const initialData = await getSortedMovies("popularity.desc", 1); 
 
   return (
-    <>
-      <div><SearchBar/></div>
-  
-    </>
+    <main>
+      <div><SearchBar initialMovies={initialData.results} initialTotalPages={initialData.total_pages}/></div>
+    </main>
   )
 }

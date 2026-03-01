@@ -4,32 +4,39 @@ import useDebounce from "@/hooks/useDebounce"
 import { searchMovies } from "@/lib/tmdb"
 import MovieCard from "./MovieCard"
 import SortableList from "./SortableList"
-import { Movie } from "@/types/movie"
+import { Movie, SearchBarProps } from "@/types/movie"
 
-export default function SearchBar() {
+export default function SearchBar({ initialMovies, initialTotalPages }:SearchBarProps) {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<Movie[]>([])
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(0)
+  const [totalPages, setTotalPages] = useState(initialTotalPages)
   const debouncedQuery = useDebounce(query, 500)
 
   useEffect(() => {
-    if (!debouncedQuery) return
+    
+  if (!debouncedQuery) {
+      setResults([]); 
+      setPage(1);
+      setTotalPages(0);
+      return;
+    }
 
-    fetchData(debouncedQuery,1)
-  }, [debouncedQuery])
+    setPage(1);
+    fetchData(debouncedQuery, 1, false);
+  }, [debouncedQuery, initialMovies, initialTotalPages])
 
     async function fetchData(movie:string, pageNumber:number, append:boolean=false) {
       setLoading(true);
 
       try{
       const data = await searchMovies(movie,pageNumber);
+      if (movie !== debouncedQuery) return;
 
       if(append){
         setResults(prev=>{
           const combined = [...prev, ...data.results]
-
           // 去除重複 movie.id
           const unique = Array.from(
             new Map(combined.map(movie => [movie.id, movie])).values()
@@ -53,8 +60,7 @@ export default function SearchBar() {
     }
 
   const loadMore = async () => {
-    if (loading) return
-    if (page >= totalPages) return
+    if (loading || page >= totalPages) return
 
    const nextPage = page + 1
     setPage(nextPage)
@@ -80,7 +86,7 @@ export default function SearchBar() {
               <div className="col-start-3 col-span-10">
                   <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                        
-                  {results.length==0? <div className="text-white">No Results found</div>:results.map((movie: any) => (
+                  {results.length==0? <div className="text-white">No Results found</div>:results.map((movie:Movie) => (
                       <MovieCard key={movie.id} movie={movie} /> ))}
                         
                   </div>
@@ -96,7 +102,7 @@ export default function SearchBar() {
                 
               </div>)}
           </div>
-      </div>:   <SortableList/>}
+      </div>:   <SortableList initialData={initialMovies} initialTotalPages={initialTotalPages}/>}
   
    
     </>

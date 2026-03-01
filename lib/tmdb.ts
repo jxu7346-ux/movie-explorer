@@ -14,6 +14,7 @@ export async function searchMovies(query: string, page:number=1) {
   const res = await fetch(
     `${BASE_URL}/search/movie?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&query=${query}&primary_release_date.lte=${today}&page=${page}`,{ cache: 'no-store' }
   )
+  if (!res.ok) throw new Error("Failed to fetch")
   return res.json()
 }
 

@@ -1,16 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import MovieCard from "./MovieCard"
 import { getSortedMovies } from "@/lib/tmdb"
-import { Movie } from "@/types/movie"
+import { Movie, SortableListProps} from "@/types/movie"
 
-export default function SortableList() {
-  const [movies, setMovies] = useState<Movie[]>([])
+export default function SortableList({ initialData = [], initialTotalPages = 0 }: SortableListProps) {
+  const [movies, setMovies] = useState<Movie[]>(initialData)
   const [loading, setLoading] = useState(false)
   const [currentSort, setCurrentSort] = useState("popularity.desc")
   const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(0)
+  const [totalPages, setTotalPages] = useState(initialTotalPages)
+
+  const isFirstRender = useRef(true)
 
   const fetchMovies = async (
     sortBy: string,
@@ -46,8 +48,14 @@ export default function SortableList() {
   }
 
   useEffect(() => {
-    fetchMovies(currentSort, 1)
-  }, [])
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      if (initialData.length > 0) return 
+    }
+    const isAppend = page > 1;
+  fetchMovies(currentSort, page, isAppend);
+   
+  }, [currentSort,page])
 
   const handleSortChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -68,19 +76,14 @@ export default function SortableList() {
         break
     }
 
-    setCurrentSort(sortBy)
-    setPage(1)
-    fetchMovies(sortBy, 1)
+    setCurrentSort(sortBy);
+    setPage(1);
+    
   }
 
   const loadMore = async () => {
-    if (loading) return
-    if (page >= totalPages) return
-
-    const nextPage = page + 1
-    setPage(nextPage)
-
-    fetchMovies(currentSort, nextPage, true)
+    if (loading || page >= totalPages) return;
+    setPage(prev => prev + 1); 
   }
 
   return (

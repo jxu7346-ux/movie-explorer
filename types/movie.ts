@@ -6,3 +6,13 @@ export interface Movie {
   release_date: string
   vote_average: number
 }
+
+export interface SearchBarProps {
+  initialMovies: Movie[];
+  initialTotalPages: number;
+}
+
+export interface SortableListProps {
+  initialData?: Movie[]; 
+  initialTotalPages: number;
+}
